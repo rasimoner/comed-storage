@@ -2,12 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Comed Chrome Extension</title>
+    <style>
+        * {
+            padding: 0;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            min-height: 340px;
+            width: 600px;
+            background-color: #f4f4f4;
+        }
+    </style>
 </head>
 <body>
 <div id="app"></div>
-<script type="module" src="/dist/main.js"></script>
+<script src="/dist/main.js" type="module"></script>
 
 </body>
 </html>
