@@ -1,9 +1,65 @@
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 const storageData = ref<{ key: string; value: string }[]>([]);
+const storageKey = ref("");
+const selectedGroup = ref("");
+const selectedParameter = ref("");
+const parameterValue = ref<string | boolean | number | null>(null);
+const parameterValueAsString = ref("");
+const filteredGroups = ref<string[]>([]);
+const filteredParameters = ref<{ key: string; value: any }[]>([]);
+
 const isLoading = ref(false);
 const activeTabId = ref<number | null>(null);
+
+const filterGroups = () => {
+    const selectedGroupData = storageData.value.find((item) => item.key === storageKey.value);
+    if (!selectedGroupData) return (filteredGroups.value = []);
+
+    const parsedValue = JSON.parse(selectedGroupData.value);
+    filteredGroups.value = Object.keys(parsedValue);
+};
+
+const filterParameters = () => {
+    const selectedGroupData = storageData.value.find((item) => item.key === storageKey.value);
+    if (!selectedGroupData) return (filteredParameters.value = []);
+
+    const parsedValue = JSON.parse(selectedGroupData.value);
+    const groupData = parsedValue[selectedGroup.value] || {};
+    filteredParameters.value = Object.keys(groupData).map((key) => ({
+        key,
+        value: groupData[key],
+    }));
+};
+
+const showParameterValue = () => {
+    const selectedParam = filteredParameters.value.find(
+        (param) => param.key === selectedParameter.value,
+    );
+    parameterValue.value = selectedParam?.value ?? null;
+};
+
+const applyArrayValue = () => {
+    try {
+        parameterValue.value = JSON.parse(parameterValueAsString.value);
+    } catch (error) {
+        alert("Geçersiz JSON formatı! Lütfen doğru bir JSON array girin.");
+    }
+};
+
+const updateValue = () => {
+    const selectedGroupData = storageData.value.find((item) => item.key === storageKey.value);
+    if (selectedGroupData) {
+        const parsedValue = JSON.parse(selectedGroupData.value);
+        if (selectedGroup.value in parsedValue) {
+            parsedValue[selectedGroup.value][selectedParameter.value] = parameterValue.value;
+            selectedGroupData.value = JSON.stringify(parsedValue);
+        }
+        updateSessionStorageData();
+        refreshPage();
+    }
+};
 
 const getActiveTabId = async (): Promise<number | null> =>
     new Promise((resolve) =>
@@ -39,14 +95,15 @@ const fetchSessionStorageData = async () => {
 const updateSessionStorageData = () => {
     if (activeTabId.value === null) return console.error("Aktif sekme bulunamadı.");
 
-    chrome.scripting.executeScript({
-        target: { tabId: activeTabId.value },
-        func: (data) => {
-            data.forEach(({ key, value }: { key: string; value: string }) =>
-                sessionStorage.setItem(key, value),
-            );
-        },
-        args: [storageData.value],
+    storageData.value.forEach((data) => {
+        if (activeTabId.value === null) return;
+
+        chrome.scripting.executeScript({
+            target: { tabId: activeTabId.value },
+            func: (item: { key: string; value: string }) =>
+                sessionStorage.setItem(item.key, item.value),
+            args: [data],
+        });
     });
 };
 
@@ -61,29 +118,107 @@ const refreshPage = () => {
 
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
-    if (activeTabId.value !== null) await fetchSessionStorageData();
-    else console.error("Aktif sekme bulunamadı.");
+    if (activeTabId.value === null) return console.error("Aktif sekme bulunamadı.");
+
+    await fetchSessionStorageData();
 });
+
+watch(
+    () => [storageData.value],
+    () => {
+        storageKey.value = storageData.value?.[0]?.key;
+    },
+    { immediate: true, deep: true },
+);
+watch(
+    () => storageKey.value,
+    () => {
+        filterGroups();
+    },
+);
+
+watch(
+    () => selectedGroup.value,
+    () => {
+        filterParameters();
+    },
+);
+
+watch(
+    () => selectedParameter.value,
+    () => {
+        showParameterValue();
+    },
+);
+watch(
+    () => parameterValue.value,
+    (newValue) => {
+        if (Array.isArray(newValue))
+            parameterValueAsString.value = JSON.stringify(newValue, null, 2);
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
-    <div>
+    <div style="width: 600px">
         <h1>SessionStorage Editor</h1>
-        <button :disabled="isLoading" @click="fetchSessionStorageData">Verileri Yenile</button>
         <div v-if="isLoading">Yükleniyor...</div>
-        <div v-else>
-            <div v-for="item in storageData" :key="item.key" class="storage-item">
-                <label>{{ item.key }}</label>
-                <input v-model="item.value" placeholder="Değer girin" type="text" />
+        <div v-else style="display: flex; flex-direction: column; gap: 12px">
+            <div>
+                <select v-model="selectedGroup" style="width: calc(100% - 12px)">
+                    <option v-for="group in filteredGroups" :key="group" :value="group">
+                        {{ group }}
+                    </option>
+                </select>
             </div>
-            <button @click="updateSessionStorageData">Güncelle</button>
-            <button @click="refreshPage">Sayfayı Yenile</button>
+            <div>
+                <select v-model="selectedParameter" style="width: calc(100% - 12px)">
+                    <option
+                        v-for="parameter in filteredParameters"
+                        :key="parameter.key"
+                        :value="parameter.key"
+                    >
+                        {{ parameter.key }}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label>Değer:</label>
+                <div v-if="Array.isArray(parameterValue)">
+                    <textarea
+                        v-model="parameterValueAsString"
+                        placeholder="JSON formatında array girin"
+                        style="width: calc(100% - 12px); height: 100px"
+                    />
+                    <button @click="applyArrayValue">Uygula</button>
+                </div>
+                <input
+                    v-else-if="typeof parameterValue === 'number'"
+                    v-model.number="parameterValue"
+                    type="number"
+                />
+                <input
+                    v-else-if="typeof parameterValue === 'boolean'"
+                    v-model="parameterValue"
+                    type="checkbox"
+                />
+                <input
+                    v-else
+                    v-model="parameterValue"
+                    :disabled="!selectedParameter"
+                    placeholder="Metin girin"
+                    style="width: calc(100% - 12px)"
+                    type="text"
+                />
+            </div>
+            <button :disabled="!selectedParameter" @click="updateValue">Güncelle</button>
         </div>
     </div>
 </template>
 
 <style scoped>
-.storage-item {
-    margin-bottom: 10px;
+h1 {
+    margin-bottom: 20px;
 }
 </style>
