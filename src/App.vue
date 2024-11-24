@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import SelectFilterComponent from "./SelectFilterComponent.vue";
 
 const storageData = ref<{ key: string; value: string }[]>([]);
 const storageKey = ref("");
@@ -13,6 +14,9 @@ const filteredParameters = ref<{ key: string; value: any }[]>([]);
 const isLoading = ref(false);
 const activeTabId = ref<number | null>(null);
 
+const onSelectGroup = (group: string) => (selectedGroup.value = group);
+const onSelectParameter = (parameter: string) => (selectedParameter.value = parameter);
+
 const filterGroups = () => {
     const selectedGroupData = storageData.value.find((item) => item.key === storageKey.value);
     if (!selectedGroupData) return (filteredGroups.value = []);
@@ -22,6 +26,7 @@ const filterGroups = () => {
 };
 
 const filterParameters = () => {
+    selectedParameter.value = "";
     const selectedGroupData = storageData.value.find((item) => item.key === storageKey.value);
     if (!selectedGroupData) return (filteredParameters.value = []);
 
@@ -46,6 +51,11 @@ const applyArrayValue = () => {
     } catch (error) {
         alert("Geçersiz JSON formatı! Lütfen doğru bir JSON array girin.");
     }
+};
+
+const validateInput = (event: Event) => {
+    const inputValue = (event.target as HTMLInputElement).value;
+    if (!inputValue || isNaN(Number(inputValue))) parameterValue.value = 0;
 };
 
 const updateValue = () => {
@@ -116,6 +126,8 @@ const refreshPage = () => {
     });
 };
 
+const filteredParameterList = computed(() => filteredParameters.value?.map((x) => x.key) ?? []);
+
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
     if (activeTabId.value === null) return console.error("Aktif sekme bulunamadı.");
@@ -161,28 +173,25 @@ watch(
 </script>
 
 <template>
-    <div style="width: 600px">
-        <h1>SessionStorage Editor</h1>
+    <div>
+        <h1 style="margin-bottom: 20px; text-align: center">Comed SessionStorage</h1>
         <div v-if="isLoading">Yükleniyor...</div>
         <div v-else style="display: flex; flex-direction: column; gap: 12px">
-            <div>
-                <select v-model="selectedGroup" style="width: calc(100% - 12px)">
-                    <option v-for="group in filteredGroups" :key="group" :value="group">
-                        {{ group }}
-                    </option>
-                </select>
-            </div>
-            <div>
-                <select v-model="selectedParameter" style="width: calc(100% - 12px)">
-                    <option
-                        v-for="parameter in filteredParameters"
-                        :key="parameter.key"
-                        :value="parameter.key"
-                    >
-                        {{ parameter.key }}
-                    </option>
-                </select>
-            </div>
+            <SelectFilterComponent
+                key="group"
+                :filtered="filteredGroups"
+                :selected="selectedGroup"
+                placeholder="Grup Ara..."
+                @onSelect="onSelectGroup"
+            />
+            <SelectFilterComponent
+                key="parameter"
+                :disabled="!selectedGroup"
+                :filtered="filteredParameterList"
+                :selected="selectedParameter"
+                placeholder="Parametre Ara..."
+                @onSelect="onSelectParameter"
+            />
             <div>
                 <label>Değer:</label>
                 <div v-if="Array.isArray(parameterValue)">
@@ -196,7 +205,9 @@ watch(
                 <input
                     v-else-if="typeof parameterValue === 'number'"
                     v-model.number="parameterValue"
+                    min="0"
                     type="number"
+                    @input="validateInput"
                 />
                 <input
                     v-else-if="typeof parameterValue === 'boolean'"
@@ -207,18 +218,22 @@ watch(
                     v-else
                     v-model="parameterValue"
                     :disabled="!selectedParameter"
+                    :style="{
+                        color: !selectedParameter ? 'rgb(170, 170, 170)' : 'rgb(84, 84, 84)',
+                        opacity: !selectedParameter ? '0.7' : '1',
+                        cursor: !selectedParameter ? 'not-allowed' : 'text',
+                    }"
                     placeholder="Metin girin"
-                    style="width: calc(100% - 12px)"
+                    style="width: calc(100% - 25px); padding: 5px"
                     type="text"
                 />
             </div>
-            <button :disabled="!selectedParameter" @click="updateValue">Güncelle</button>
+        </div>
+        <div style="width: calc(100% - 12px); display: flex; padding-top: 10px">
+            <span style="width: calc(100% - 12px)"></span>
+            <button :disabled="!selectedParameter" style="height: 30px" @click="updateValue">
+                Güncelle
+            </button>
         </div>
     </div>
 </template>
-
-<style scoped>
-h1 {
-    margin-bottom: 20px;
-}
-</style>
