@@ -47,7 +47,7 @@ const arrayText = shallowRef("");
 watch(
     () => props.value,
     (val) => {
-        localValue.value = structuredClone(val);
+        localValue.value = val;
         if (Array.isArray(val)) {
             arrayText.value = JSON.stringify(val, null, 2);
         }
@@ -69,6 +69,4 @@ const applyArray = () => {
 const emitUpdate = () => {
     emit("updateClick");
 };
-
-
 </script>
