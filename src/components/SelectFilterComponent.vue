@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 
 const props = defineProps<{
     selected: string;
@@ -9,9 +9,18 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ (event: "onSelect", value: string): void }>();
 
-const searchedItems = ref<string[]>([]);
-const searchQuery = ref("");
-const isDropdownVisible = ref(false);
+const searchedItems = shallowRef<string[]>([]);
+const searchQuery = shallowRef("");
+const isDropdownVisible = shallowRef(false);
+const wrapperRef = ref<HTMLElement | null>(null);
+
+const handleClickOutside = (e: MouseEvent) => {
+    if (!wrapperRef.value) return;
+
+    if (!wrapperRef.value.contains(e.target as Node)) {
+        isDropdownVisible.value = false;
+    }
+};
 
 const onSearchItems = () =>
     (searchedItems.value = props.filtered.filter((group) =>
@@ -38,20 +47,19 @@ const clearDropdown = () => {
     searchedItems.value = props.filtered;
     onSelect("");
 };
+
+onMounted(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener("mousedown", handleClickOutside);
+});
 </script>
 
 <template>
-    <div style="position: relative; width: calc(100% - 12px)">
-        <div
-            :style="{
-                opacity: disabled ? '0.7' : '1',
-                backgroundColor: disabled ? 'rgba(239, 239, 239, 0.3)' : 'white',
-                cursor: disabled ? 'not-allowed' : 'pointer',
-            }"
-            class="custom-select"
-            style="display: flex; border: 1px solid #ccc; padding: 8px"
-            @click="toggleDropdown"
-        >
+    <div class="select-filter" ref="wrapperRef">
+        <div :class="['custom-select', { disabled: props.disabled }]" @click="toggleDropdown">
             <div
                 v-if="!searchQuery && !selected && !isDropdownVisible"
                 style="display: flex; color: #aaa; width: 100%"
