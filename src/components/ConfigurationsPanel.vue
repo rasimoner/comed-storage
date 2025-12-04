@@ -3,6 +3,14 @@ import { computed, ref, onMounted, watch, shallowRef } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
 
+const props = defineProps<{
+    selected?: { key: string; value: any, group: string, label: string };
+}>()
+
+const emit = defineEmits<{
+    (event: "storage-fetched", value: { key: string; value: string }[]): void;
+}>()
+
 const storageData = ref<{ key: string; value: string }[]>([]);
 const storageKey = shallowRef("");
 const selectedGroup = shallowRef("");
@@ -11,6 +19,7 @@ const filteredGroups = ref<string[]>([]);
 const filteredParameters = ref<{ key: string; value: any }[]>([]);
 const parameterValue = ref<string | boolean | number | null>(null);
 const parameterValueAsString = shallowRef("");
+const isUserSelecting = ref(false);
 
 const activeTabId = ref<number | null>(null);
 const isLoading = shallowRef(false);
@@ -21,6 +30,28 @@ const getActiveTabId = async () =>
             resolve(tabs?.[0]?.id ?? null),
         ),
     );
+
+const onGroupSelect = (val: string) => {
+    isUserSelecting.value = true;
+    selectedGroup.value = val;
+
+    const match = storageData.value.find(item => {
+        try {
+            const parsed = JSON.parse(item.value);
+            return Object.keys(parsed).includes(val);
+        } catch {
+            return false;
+        }
+    });
+
+    storageKey.value = match?.key || "";
+};
+
+
+const onParameterSelect = (val: string) => {
+    isUserSelecting.value = true;
+    selectedParameter.value = val;
+};
 
 const fetchSessionStorageData = async () => {
     if (!activeTabId.value) return;
@@ -44,6 +75,8 @@ const fetchSessionStorageData = async () => {
             storageData.value = results?.[0]?.result ?? [];
             storageKey.value = storageData.value?.[0]?.key;
             isLoading.value = false;
+
+            emit("storage-fetched", storageData.value);
         },
     );
 };
@@ -57,7 +90,10 @@ const filterGroups = () => {
 };
 
 const filterParameters = () => {
-    selectedParameter.value = "";
+    if (isUserSelecting.value) {
+        selectedParameter.value = "";
+        isUserSelecting.value = false;
+    }
 
     const found = storageData.value.find((x) => x.key === storageKey.value);
     if (!found) return (filteredParameters.value = []);
@@ -71,7 +107,11 @@ const filterParameters = () => {
     }));
 };
 
+
 const showParameterValue = () => {
+    if(!selectedParameter.value) {
+       return parameterValue.value = null;
+    }
     const found = filteredParameters.value.find((x) => x.key === selectedParameter.value);
     parameterValue.value = found?.value ?? null;
 };
@@ -105,6 +145,12 @@ watch(parameterValue, (val) => {
     if (Array.isArray(val)) parameterValueAsString.value = JSON.stringify(val, null, 2);
 });
 
+watch( () => props.selected,  (newVal) => {
+        isUserSelecting.value = false;
+        selectedGroup.value = newVal.group;
+        selectedParameter.value = newVal.key;
+}, { immediate: true });
+
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
     await fetchSessionStorageData();
@@ -117,7 +163,7 @@ onMounted(async () => {
             :filtered="filteredGroups"
             :selected="selectedGroup"
             placeholder="Grup Ara..."
-            @onSelect="(val) => (selectedGroup = val)"
+            @onSelect="onGroupSelect"
         />
 
         <SelectFilterComponent
@@ -125,7 +171,7 @@ onMounted(async () => {
             :filtered="filteredParameters.map((x) => x.key)"
             :selected="selectedParameter"
             placeholder="Parametre Ara..."
-            @onSelect="(val) => (selectedParameter = val)"
+            @onSelect="onParameterSelect"
         />
 
         <ValueEditor
