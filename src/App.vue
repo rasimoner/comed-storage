@@ -14,17 +14,19 @@ import ConfigurationsPanel from "./components/ConfigurationsPanel.vue";
 import ClaimsPanel from "./components/ClaimsPanel.vue";
 import ToggleSwitch from "./components/ToggleSwitch.vue";
 import AutocompleteSimple from "./components/AutocompleteSimple.vue";
+import { ConfigItem } from "@/types/config-item.interface";
+import { StorageEntryInterface } from "@/types/storage-entry.interface";
 
 const showConfigurations = shallowRef(true);
-const options = ref([]);
-const selected = ref(null);
+const options = ref<ConfigItem[]>([]);
+const selected = ref<ConfigItem | null>(null);
 
-const updateSelections = (value) => selected.value = value;
+const updateSelections = (value: ConfigItem | null) => selected.value = value;
 
-const handleData = (rawList) => {
-    const allConfigs = {};
+const handleData = (rawList:StorageEntryInterface[]) => {
+    const allConfigs: Record<string, any> = {};
 
-    rawList.forEach(item => {
+    rawList.forEach((item: StorageEntryInterface) => {
         try {
             const parsed = JSON.parse(item.value);
             Object.assign(allConfigs, parsed);
@@ -36,8 +38,8 @@ const handleData = (rawList) => {
     options.value = flattenConfigs(allConfigs);
 };
 
-const flattenConfigs = (data) => {
-    const items = [];
+const flattenConfigs = (data: any): ConfigItem[] => {
+    const items: ConfigItem[] = [];
 
     for (const group in data) {
         const groupObj = data[group];

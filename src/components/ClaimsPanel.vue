@@ -85,8 +85,9 @@ const filterGroups = () => {
                 return null;
             }
         })
-        .filter(x => x);
+        .filter((x): x is string => x !== null);
 };
+
 
 
 const filterClaimParameters = () => {
