@@ -16,14 +16,14 @@
                 @click="select(item)"
                 class="autocomplete-item"
             >
-               <span class="group-label">{{ `(${item.group})` }}</span>   {{ item.label }}
+                <span class="group-label">{{ `(${item.group})` }}</span> {{ item.label }}
             </li>
         </ul>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, shallowRef } from "vue";
 import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
@@ -34,34 +34,30 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:value", "input"]);
 
-const searchText = ref("");
+const searchText = shallowRef("");
+const open = shallowRef(false);
 const filtered = ref<any[]>([]);
-const open = ref(false);
 const wrapper = ref<HTMLElement | null>(null);
 
 watch(
     () => props.value,
     (val) => {
-        if (val && val.label) {
-            searchText.value = val.label;
-        }
+        if (val && val.label) searchText.value = val.label;
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 const filterItems = () => {
-    if(searchText.value.length < 3) return;
+    if (searchText.value.length < 3) return (filtered.value = []);
 
     const q = searchText.value?.toLowerCase();
-    filtered.value = props.items?.filter((i) =>
-        i.label?.toLowerCase().includes(q)
-    );
+    filtered.value = props.items?.filter((i) => i.label?.toLowerCase().includes(q));
     open.value = true;
 };
 
 const select = (item: any) => {
     searchText.value = "";
-    filtered.value = []
+    filtered.value = [];
     open.value = false;
 
     emit("update:value", item);
@@ -69,20 +65,12 @@ const select = (item: any) => {
 };
 
 const clickHandler = (e: MouseEvent) => {
-    if (wrapper.value && !wrapper.value.contains(e.target as Node)) {
-        open.value = false;
-    }
+    if (wrapper.value && !wrapper.value.contains(e.target as Node)) open.value = false;
 };
 
-onMounted(() => {
-    document.addEventListener("click", clickHandler);
-});
+onMounted(() => document.addEventListener("click", clickHandler));
 
-onBeforeUnmount(() => {
-    document.removeEventListener("click", clickHandler);
-});
+onBeforeUnmount(() => document.removeEventListener("click", clickHandler));
 </script>
 
-<style>
-
-</style>
+<style></style>
