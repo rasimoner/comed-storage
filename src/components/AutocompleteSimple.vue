@@ -16,7 +16,7 @@
                 @click="select(item)"
                 class="autocomplete-item"
             >
-                {{ item.label }}--{{ `(${item.group})` }}
+               <span class="group-label">{{ `(${item.group})` }}</span>   {{ item.label }}
             </li>
         </ul>
     </div>
@@ -24,10 +24,11 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
-    value: any;
-    items: { value: string; text: string }[];
+    value: ConfigItem | null;
+    items: ConfigItem[];
     placeholder?: string;
 }>();
 
@@ -41,8 +42,8 @@ const wrapper = ref<HTMLElement | null>(null);
 watch(
     () => props.value,
     (val) => {
-        if (val && val.text) {
-            searchText.value = val.text;
+        if (val && val.label) {
+            searchText.value = val.label;
         }
     },
     { immediate: true }
@@ -82,3 +83,6 @@ onBeforeUnmount(() => {
 });
 </script>
 
+<style>
+
+</style>

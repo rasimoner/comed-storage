@@ -146,6 +146,8 @@ watch(parameterValue, (val) => {
 });
 
 watch( () => props.selected,  (newVal) => {
+    if (!newVal) return;
+
         isUserSelecting.value = false;
         selectedGroup.value = newVal.group;
         selectedParameter.value = newVal.key;
