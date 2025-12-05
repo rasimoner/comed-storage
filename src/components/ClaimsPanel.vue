@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, shallowRef } from "vue";
+import { ref, watch, onMounted, shallowRef } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
+
+const props = defineProps<{
+    selected?: { key: string; value: any, group: string, label: string };
+}>()
+const emit = defineEmits<{
+    (event: "storage-fetched", value: { key: string; value: string }[]): void;
+}>()
 
 const claimsData = ref<{ key: string; value: string }[]>([]);
 const claimsKey = shallowRef("");
 const selectedClaim = shallowRef("");
+const selectedGroup = shallowRef("");
 const claimValue = ref(null);
-const filteredClaims = ref<string[]>([]);
-
+const filteredClaims = ref<{ key: string; value: any }[]>([]);
 const activeTabId = ref<number | null>(null);
+const filteredGroups = ref<string[]>([]);
+const claimValueAsString = shallowRef("");
+const isUserSelecting = ref(false);
 
 const getActiveTabId = async () =>
     new Promise<number | null>((resolve) =>
@@ -17,6 +27,30 @@ const getActiveTabId = async () =>
             resolve(tabs?.[0]?.id ?? null),
         ),
     );
+
+const onGroupSelected = (val: string) => {
+    isUserSelecting.value = true;
+    selectedGroup.value = val;
+    const match = findClaimConfigByGroup(val);
+
+    claimsKey.value = match?.key || "";
+};
+
+const findClaimConfigByGroup = (val: string) => {
+    return claimsData.value.find(item => {
+        try {
+            const parsed = JSON.parse(item.value);
+            return Object.keys(parsed)[0] === val;
+        } catch {
+            return false;
+        }
+    });
+}
+
+const onClaimSelected = (val: string) => {
+    isUserSelecting.value = true;
+    selectedClaim.value = val;
+};
 
 const fetchClaimsData = async () => {
     if (!activeTabId.value) return;
@@ -35,70 +69,47 @@ const fetchClaimsData = async () => {
         (res) => {
             claimsData.value = res?.[0]?.result ?? [];
             claimsKey.value = claimsData.value?.[0]?.key || "";
+
+            emit("storage-fetched", claimsData.value);
         },
     );
 };
 
-const claimsDisplayList = computed(() =>
-    claimsData.value
-        .map((item) => {
+const filterGroups = () => {
+    filteredGroups.value = claimsData.value
+        .map(item => {
             try {
                 const parsed = JSON.parse(item.value);
                 return Object.keys(parsed)[0];
             } catch {
-                return "";
+                return null;
             }
         })
-        .filter((x) => x),
-);
-
-const selectedClaimDisplay = computed(() => {
-    const item = claimsData.value.find((c) => c.key === claimsKey.value);
-    if (!item) return "";
-
-    try {
-        const parsed = JSON.parse(item.value);
-        return Object.keys(parsed)[0];
-    } catch {
-        return "";
-    }
-});
-
-const selectClaimKey = (rootName: string) => {
-    const match = claimsData.value.find((item) => {
-        try {
-            const parsed = JSON.parse(item.value);
-            return Object.keys(parsed)[0] === rootName;
-        } catch {
-            return false;
-        }
-    });
-
-    claimsKey.value = match?.key || "";
-    filterClaimParameters();
+        .filter((x): x is string => x !== null);
 };
+
+
 
 const filterClaimParameters = () => {
-    selectedClaim.value = "";
-    filteredClaims.value = [];
+    const match = findClaimConfigByGroup(selectedGroup.value)
 
-    const item = claimsData.value.find((x) => x.key === claimsKey.value);
-    if (!item) return;
+    if (!match) return filteredClaims.value = [];
 
-    const parsed = JSON.parse(item.value);
-    const root = Object.keys(parsed)[0];
+    const parsed = JSON.parse(match.value);
+    const groupData = parsed[selectedGroup.value];
 
-    filteredClaims.value = Object.keys(parsed[root] || {});
+    filteredClaims.value = Object.keys(groupData).map(k => ({
+        key: k,
+        value: groupData[k],
+    }));
 };
 
-const showClaimValue = () => {
-    const item = claimsData.value.find((x) => x.key === claimsKey.value);
-    if (!item) return;
-
-    const parsed = JSON.parse(item.value);
-    const root = Object.keys(parsed)[0];
-
-    claimValue.value = parsed[root][selectedClaim.value];
+const showParameterValue = () => {
+    if(!selectedClaim.value) {
+        return claimValue.value = null;
+    }
+    const found = filteredClaims.value.find((x) => x.key === selectedClaim.value);
+    claimValue.value = found?.value ?? null;
 };
 
 const updateClaimValue = () => {
@@ -106,9 +117,7 @@ const updateClaimValue = () => {
     if (!item) return;
 
     const parsed = JSON.parse(item.value);
-    const root = Object.keys(parsed)[0];
-
-    parsed[root][selectedClaim.value] = claimValue.value;
+    parsed[selectedGroup.value][selectedClaim.value] = claimValue.value;
     item.value = JSON.stringify(parsed);
 
     chrome.scripting.executeScript({
@@ -123,8 +132,24 @@ const updateClaimValue = () => {
     });
 };
 
-watch(claimsKey, filterClaimParameters);
-watch(selectedClaim, showClaimValue);
+watch(claimsKey, filterGroups);
+watch(selectedGroup, filterClaimParameters);
+watch(selectedClaim, showParameterValue);
+
+watch(claimValue, (val) => {
+    if (Array.isArray(val)) claimValueAsString.value = JSON.stringify(val, null, 2);
+});
+
+watch(() => props.selected, async (newVal) => {
+    if (!newVal) return;
+
+    isUserSelecting.value = false;
+    selectedGroup.value = newVal.group;
+    selectedClaim.value = newVal.key;
+    const match = findClaimConfigByGroup(selectedGroup.value)
+
+    claimsKey.value = match?.key || "";
+});
 
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
@@ -135,19 +160,19 @@ onMounted(async () => {
 <template>
     <div>
         <SelectFilterComponent
-            :filtered="claimsDisplayList"
-            :selected="selectedClaimDisplay"
+            :filtered="filteredGroups"
+            :selected="selectedGroup"
             placeholder="Grup Ara..."
             class="select-filter"
-            @onSelect="selectClaimKey"
+            @onSelect="onGroupSelected"
         />
 
         <SelectFilterComponent
-            :disabled="!claimsKey"
-            :filtered="filteredClaims"
+            :disabled="!selectedGroup"
+            :filtered="filteredClaims.map((x) => x.key)"
             :selected="selectedClaim"
             placeholder="Yetki Ara..."
-            @onSelect="(val) => (selectedClaim = val)"
+            @onSelect="onClaimSelected"
         />
 
         <ValueEditor
