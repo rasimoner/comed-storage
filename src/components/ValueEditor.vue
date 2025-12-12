@@ -20,7 +20,7 @@
             class="number-checkbox"
         />
 
-        <input v-else type="text" v-model="localValue" class="textArea-div" />
+        <input v-else :disabled="disabled" type="text" v-model="localValue" class="textArea-div" />
         <div class="update-button">
             <button :disabled="disabled" @click="emitUpdate" class="update-btn">
                 {{ updateText }}
@@ -33,19 +33,19 @@
 import { ref, shallowRef, watch } from "vue";
 
 const props = defineProps<{
-    value: any;
+    modelValue: any;
     label?: string;
     disabled?: boolean;
     updateText?: string;
 }>();
 
-const emit = defineEmits(["update:value", "apply", "updateClick"]);
+const emit = defineEmits(["update:modelValue", "apply", "updateClick"]);
 
 const localValue = ref(null);
 const arrayText = shallowRef("");
 
 watch(
-    () => props.value,
+    () => props.modelValue,
     (val) => {
         localValue.value = val;
         if (Array.isArray(val)) {
@@ -55,12 +55,12 @@ watch(
 );
 
 watch(localValue, (val) => {
-    emit("update:value", val);
+    emit("update:modelValue", val);
 });
 
 const applyArray = () => {
     try {
-        emit("update:value", JSON.parse(arrayText.value));
+        emit("update:modelValue", JSON.parse(arrayText.value));
     } catch {
         alert("Geçersiz JSON formatı!");
     }

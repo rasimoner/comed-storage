@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch, shallowRef } from "vue";
+import { ref, onMounted, watch, shallowRef } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
+import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
-    selected?: { key: string; value: any, group: string, label: string };
-}>()
+    selected?: ConfigItem | null;
+}>();
 
 const emit = defineEmits<{
     (event: "storage-fetched", value: { key: string; value: string }[]): void;
-}>()
+}>();
 
 const storageData = ref<{ key: string; value: string }[]>([]);
 const storageKey = shallowRef("");
@@ -35,7 +36,7 @@ const onGroupSelect = (val: string) => {
     isUserSelecting.value = true;
     selectedGroup.value = val;
 
-    const match = storageData.value.find(item => {
+    const match = storageData.value.find((item) => {
         try {
             const parsed = JSON.parse(item.value);
             return Object.keys(parsed).includes(val);
@@ -46,7 +47,6 @@ const onGroupSelect = (val: string) => {
 
     storageKey.value = match?.key || "";
 };
-
 
 const onParameterSelect = (val: string) => {
     isUserSelecting.value = true;
@@ -107,10 +107,9 @@ const filterParameters = () => {
     }));
 };
 
-
 const showParameterValue = () => {
-    if(!selectedParameter.value) {
-       return parameterValue.value = null;
+    if (!selectedParameter.value) {
+        return (parameterValue.value = null);
     }
     const found = filteredParameters.value.find((x) => x.key === selectedParameter.value);
     parameterValue.value = found?.value ?? null;
@@ -126,15 +125,20 @@ const updateConfigValue = () => {
     found.value = JSON.stringify(parsed);
 
     chrome.scripting.executeScript({
-        target: { tabId: activeTabId.value ?? 0},
+        target: { tabId: activeTabId.value ?? 0 },
         func: (item) => sessionStorage.setItem(item.key, item.value),
         args: [found],
     });
 
     chrome.scripting.executeScript({
-        target: { tabId: activeTabId.value ?? 0},
+        target: { tabId: activeTabId.value ?? 0 },
         func: () => location.reload(),
     });
+};
+
+const clear = () => {
+    selectedGroup.value = "";
+    selectedParameter.value = "";
 };
 
 watch(storageKey, filterGroups);
@@ -145,17 +149,22 @@ watch(parameterValue, (val) => {
     if (Array.isArray(val)) parameterValueAsString.value = JSON.stringify(val, null, 2);
 });
 
-watch( () => props.selected,  (newVal) => {
-    if (!newVal) return;
+watch(
+    () => props.selected,
+    (newVal) => {
+        if (!newVal) return;
 
         isUserSelecting.value = false;
         selectedGroup.value = newVal.group;
         selectedParameter.value = newVal.key;
-}, { immediate: true });
+    },
+    { immediate: true },
+);
 
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
     await fetchSessionStorageData();
+    clear();
 });
 </script>
 
@@ -177,11 +186,10 @@ onMounted(async () => {
         />
 
         <ValueEditor
-            :value="parameterValue"
+            v-model="parameterValue"
             label="Değer"
             :disabled="!selectedParameter"
             update-text="Güncelle"
-            @update:value="parameterValue = $event"
             @updateClick="updateConfigValue"
         />
     </div>
