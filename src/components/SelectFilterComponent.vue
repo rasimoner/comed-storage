@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
 
 const props = defineProps<{
     selected: string;
@@ -13,6 +13,7 @@ const searchedItems = shallowRef<string[]>([]);
 const searchQuery = shallowRef("");
 const isDropdownVisible = shallowRef(false);
 const wrapperRef = ref<HTMLElement | null>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
 
 const handleClickOutside = (e: MouseEvent) => {
     if (!wrapperRef.value) return;
@@ -33,12 +34,16 @@ const selectGroup = (group: string) => {
 };
 const onSelect = (value: string) => emit("onSelect", value);
 
-const toggleDropdown = () => {
+const toggleDropdown = async () => {
     if (props.disabled) return;
 
     isDropdownVisible.value = !isDropdownVisible.value;
     searchQuery.value = "";
     searchedItems.value = props.filtered;
+    if (isDropdownVisible.value) {
+        await nextTick();
+        searchInputRef.value?.focus();
+    }
 };
 
 const clearDropdown = () => {
@@ -69,6 +74,7 @@ onBeforeUnmount(() => {
             </div>
             <template v-else-if="isDropdownVisible">
                 <input
+                    ref="searchInputRef"
                     v-model="searchQuery"
                     :placeholder="placeholder"
                     autofocus

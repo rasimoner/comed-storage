@@ -2,13 +2,14 @@
 import { ref, watch, onMounted, shallowRef } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
+import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
-    selected?: { key: string; value: any, group: string, label: string };
-}>()
+    selected?: ConfigItem | null;
+}>();
 const emit = defineEmits<{
     (event: "storage-fetched", value: { key: string; value: string }[]): void;
-}>()
+}>();
 
 const claimsData = ref<{ key: string; value: string }[]>([]);
 const claimsKey = shallowRef("");
@@ -37,7 +38,7 @@ const onGroupSelected = (val: string) => {
 };
 
 const findClaimConfigByGroup = (val: string) => {
-    return claimsData.value.find(item => {
+    return claimsData.value.find((item) => {
         try {
             const parsed = JSON.parse(item.value);
             return Object.keys(parsed)[0] === val;
@@ -45,7 +46,7 @@ const findClaimConfigByGroup = (val: string) => {
             return false;
         }
     });
-}
+};
 
 const onClaimSelected = (val: string) => {
     isUserSelecting.value = true;
@@ -77,7 +78,7 @@ const fetchClaimsData = async () => {
 
 const filterGroups = () => {
     filteredGroups.value = claimsData.value
-        .map(item => {
+        .map((item) => {
             try {
                 const parsed = JSON.parse(item.value);
                 return Object.keys(parsed)[0];
@@ -88,25 +89,23 @@ const filterGroups = () => {
         .filter((x): x is string => x !== null);
 };
 
-
-
 const filterClaimParameters = () => {
-    const match = findClaimConfigByGroup(selectedGroup.value)
+    const match = findClaimConfigByGroup(selectedGroup.value);
 
-    if (!match) return filteredClaims.value = [];
+    if (!match) return (filteredClaims.value = []);
 
     const parsed = JSON.parse(match.value);
     const groupData = parsed[selectedGroup.value];
 
-    filteredClaims.value = Object.keys(groupData).map(k => ({
+    filteredClaims.value = Object.keys(groupData).map((k) => ({
         key: k,
         value: groupData[k],
     }));
 };
 
 const showParameterValue = () => {
-    if(!selectedClaim.value) {
-        return claimValue.value = null;
+    if (!selectedClaim.value) {
+        return (claimValue.value = null);
     }
     const found = filteredClaims.value.find((x) => x.key === selectedClaim.value);
     claimValue.value = found?.value ?? null;
@@ -132,6 +131,11 @@ const updateClaimValue = () => {
     });
 };
 
+const clear = () => {
+    selectedGroup.value = "";
+    selectedClaim.value = "";
+};
+
 watch(claimsKey, filterGroups);
 watch(selectedGroup, filterClaimParameters);
 watch(selectedClaim, showParameterValue);
@@ -140,20 +144,24 @@ watch(claimValue, (val) => {
     if (Array.isArray(val)) claimValueAsString.value = JSON.stringify(val, null, 2);
 });
 
-watch(() => props.selected, async (newVal) => {
-    if (!newVal) return;
+watch(
+    () => props.selected,
+    async (newVal) => {
+        if (!newVal) return;
 
-    isUserSelecting.value = false;
-    selectedGroup.value = newVal.group;
-    selectedClaim.value = newVal.key;
-    const match = findClaimConfigByGroup(selectedGroup.value)
+        isUserSelecting.value = false;
+        selectedGroup.value = newVal.group;
+        selectedClaim.value = newVal.key;
+        const match = findClaimConfigByGroup(selectedGroup.value);
 
-    claimsKey.value = match?.key || "";
-});
+        claimsKey.value = match?.key || "";
+    },
+);
 
 onMounted(async () => {
     activeTabId.value = await getActiveTabId();
     await fetchClaimsData();
+    clear();
 });
 </script>
 
@@ -176,11 +184,10 @@ onMounted(async () => {
         />
 
         <ValueEditor
-            :value="claimValue"
+            v-model="claimValue"
             label="Değer"
             :disabled="!selectedClaim"
             update-text="Güncelle"
-            @update:value="claimValue = $event"
             @updateClick="updateClaimValue"
         />
     </div>
