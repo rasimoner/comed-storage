@@ -19,8 +19,9 @@
             <li
                 v-for="(item, index) in filtered"
                 :key="`${item.key}.${item.group}`"
+                :ref="(el) => (itemsRef[index] = el as HTMLElement)"
                 @click="select(item)"
-                :class="['autocomplete-item', highlightedIndex === index ? 'highlighted' : '']"
+                :class="['autocomplete-item', highlightedIndex === index && 'highlighted']"
             >
                 <span class="group-label">({{ item.group }})</span> {{ item.label }}
             </li>
@@ -30,6 +31,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { ConfigItem } from "@/types/config-item.interface";
+import { useKeyboardNavigation } from "@/composables/useKeyboardNavigation";
 
 const props = defineProps<{
     modelValue: ConfigItem | null;
@@ -45,16 +47,32 @@ const filtered = ref<ConfigItem[]>([]);
 const open = ref(false);
 const wrapper = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
-const highlightedIndex = ref(-1);
+const itemsRef = ref<HTMLElement[]>([]);
+const { highlightedIndex, moveDown, moveUp, enterSelect, reset } = useKeyboardNavigation({
+    items: filtered,
+    itemRefs: itemsRef,
+    onSelect: (item) => select(item),
+});
 
 watch(
     () => props.showConfigurations,
     () => {
         searchText.value = "";
-        filtered.value = []
+        filtered.value = [];
     },
     { immediate: true },
 );
+
+watch(highlightedIndex, (i) => {
+    if (i < 0) return;
+
+    const el = itemsRef.value[i];
+    if (!el) return;
+
+    el.scrollIntoView({
+        block: "nearest",
+    });
+});
 
 const filterItems = () => {
     filtered.value = [];
@@ -75,24 +93,8 @@ const select = (item: ConfigItem) => {
     searchText.value = item.label;
     filtered.value = [];
     open.value = false;
-
+    reset();
     emit("update:modelValue", item);
-};
-
-const moveDown = () => {
-    if (!open.value || !filtered.value.length) return;
-    highlightedIndex.value = (highlightedIndex.value + 1) % filtered.value.length;
-};
-
-const moveUp = () => {
-    if (!open.value || !filtered.value.length) return;
-    highlightedIndex.value =
-        (highlightedIndex.value - 1 + filtered.value.length) % filtered.value.length;
-};
-
-const enterSelect = () => {
-    if (!open.value || highlightedIndex.value < 0) return;
-    select(filtered.value[highlightedIndex.value]);
 };
 
 const clickHandler = (e: MouseEvent) => {

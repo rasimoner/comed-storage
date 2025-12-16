@@ -1,25 +1,36 @@
 <template>
-    <div class="app">
-        <h1 style="margin-bottom: 20px; text-align: center">Comed Session Storage</h1>
-        <div v-if="error" class="context-warning">
-            {{ error }}
-        </div>
-        <div v-else>
-            <ToggleSwitch v-model="showConfigurations" />
-            <AutocompleteSimple
-                v-model="selected"
-                :items="options"
-                placeholder="Arama yap..."
-                :show-configurations="showConfigurations"
-            />
-            <ConfigurationsPanel
-                v-if="showConfigurations"
-                @storage-fetched="handleData"
-                :selected="selected"
-            />
-            <ClaimsPanel v-else :selected="selected" @storage-fetched="handleData" />
-            <div class="app-version">Versiyon: {{ version }}</div>
-        </div>
+    <div class="app" :class="{ dark: isDark }">
+
+            <div class="app-header">
+                <h1>Comed Session Storage</h1>
+
+                <button
+                    class="theme-toggle"
+                    @click="isDark = !isDark"
+                    :title="isDark ? 'Light mode' : 'Dark mode'"
+                >
+                    {{ isDark ? "☀️" : "🌙" }}
+                </button>
+            </div>
+            <div v-if="error" class="context-warning">
+                {{ error }}
+            </div>
+            <div v-else>
+                <ToggleSwitch v-model="showConfigurations" />
+                <AutocompleteSimple
+                    v-model="selected"
+                    :items="options"
+                    placeholder="Arama yap..."
+                    :show-configurations="showConfigurations"
+                />
+                <ConfigurationsPanel
+                    v-if="showConfigurations"
+                    @storage-fetched="handleData"
+                    :selected="selected"
+                />
+                <ClaimsPanel v-else :selected="selected" @storage-fetched="handleData" />
+                <div class="app-version">Versiyon: {{ version }}</div>
+            </div>
     </div>
 </template>
 
@@ -39,6 +50,15 @@ const options = ref<ConfigItem[]>([]);
 const selected = ref<ConfigItem | null>(null);
 const autoSimpleKey = ref(0);
 const error = ref<string | null>(null);
+const isDark = ref(false);
+
+watch(
+    isDark,
+    (val) => {
+        document.body.classList.toggle("dark", val);
+    },
+    { immediate: true },
+);
 
 watch(
     () => showConfigurations.value,
@@ -46,6 +66,15 @@ watch(
 );
 
 const handleData = (rawList: StorageEntryInterface[]) => {
+    if (!rawList || !rawList?.length) {
+        error.value = "Comed Parametre ve Yetki Tanımlamaları Bulunamadı!";
+        options.value = [];
+        selected.value = null;
+        return;
+    }
+
+    error.value = null;
+
     const allConfigs: Record<string, any> = {};
 
     rawList.forEach((item: StorageEntryInterface) => {
@@ -80,35 +109,9 @@ const flattenConfigs = (data: any): ConfigItem[] => {
     return items;
 };
 
-const isComedContext = async (): Promise<boolean> => {
-    return new Promise((resolve) => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const tabId = tabs[0]?.id;
-            if (!tabId) return resolve(false);
-
-            chrome.scripting.executeScript(
-                {
-                    target: { tabId },
-                    func: () => {
-                        return performance
-                            .getEntriesByType("resource")
-                            .some((r) => r.name.includes("comed.com.tr"));
-                    },
-                },
-                (res) => {
-                    resolve(Boolean(res?.[0]?.result));
-                },
-            );
-        });
-    });
-};
-
-onMounted(async () => {
-    const isComed = await isComedContext();
-
-    if (!isComed) {
-        error.value = "Comed Parametre ve Yetki Tanımlamaları Bulunamadı!";
-        return;
-    }
+onMounted(() => {
+    // Sistem temasını al
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    isDark.value = prefersDark;
 });
 </script>

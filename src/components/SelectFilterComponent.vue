@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+import { useKeyboardNavigation } from "@/composables/useKeyboardNavigation";
 
 const props = defineProps<{
     selected: string;
@@ -7,32 +8,39 @@ const props = defineProps<{
     placeholder: string;
     disabled?: boolean;
 }>();
-const emit = defineEmits<{ (event: "onSelect", value: string): void }>();
+
+const emit = defineEmits<{
+    (event: "onSelect", value: string): void;
+}>();
 
 const searchedItems = shallowRef<string[]>([]);
 const searchQuery = shallowRef("");
 const isDropdownVisible = shallowRef(false);
 const wrapperRef = ref<HTMLElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const itemRefs = ref<HTMLElement[]>([]);
+const { highlightedIndex, moveDown, moveUp, enterSelect, reset } = useKeyboardNavigation({
+    items: searchedItems,
+    itemRefs,
+    onSelect: (value) => selectGroup(value),
+});
 
 const handleClickOutside = (e: MouseEvent) => {
-    if (!wrapperRef.value) return;
-
-    if (!wrapperRef.value.contains(e.target as Node)) {
+    if (wrapperRef.value && !wrapperRef.value.contains(e.target as Node)) {
         isDropdownVisible.value = false;
     }
 };
 
-const onSearchItems = () =>
-    (searchedItems.value = props.filtered.filter((group) =>
+const onSearchItems = () => {
+    searchedItems.value = props.filtered.filter((group) =>
         group.toLowerCase().includes(searchQuery.value.toLowerCase()),
-    ));
+    );
+};
 
 const selectGroup = (group: string) => {
     isDropdownVisible.value = false;
-    onSelect(group);
+    emit("onSelect", group);
 };
-const onSelect = (value: string) => emit("onSelect", value);
 
 const toggleDropdown = async () => {
     if (props.disabled) return;
@@ -40,6 +48,7 @@ const toggleDropdown = async () => {
     isDropdownVisible.value = !isDropdownVisible.value;
     searchQuery.value = "";
     searchedItems.value = props.filtered;
+
     if (isDropdownVisible.value) {
         await nextTick();
         searchInputRef.value?.focus();
@@ -50,8 +59,14 @@ const clearDropdown = () => {
     isDropdownVisible.value = false;
     searchQuery.value = "";
     searchedItems.value = props.filtered;
-    onSelect("");
+    emit("onSelect", "");
 };
+
+watch(isDropdownVisible, (open) => {
+    if (!open) {
+        reset();
+    }
+});
 
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -64,44 +79,43 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="select-filter" ref="wrapperRef">
-        <div :class="['custom-select', { disabled: props.disabled }]" @click="toggleDropdown">
+        <div class="custom-select" :class="{ disabled: props.disabled }" @click="toggleDropdown">
+            <!-- Placeholder -->
             <div
                 v-if="!searchQuery && !selected && !isDropdownVisible"
-                style="display: flex; color: #aaa; width: 100%"
+                class="custom-select-placeholder"
             >
-                <span style="width: 100%">{{ placeholder }}</span>
-                <span>↓</span>
+                <span>{{ placeholder }}</span>
+                <span class="custom-select-arrow">↓</span>
             </div>
+
+            <!-- Search input -->
             <template v-else-if="isDropdownVisible">
                 <input
                     ref="searchInputRef"
                     v-model="searchQuery"
                     :placeholder="placeholder"
-                    autofocus
-                    style="width: 100%; border: none; outline: none"
+                    @keydown.down.prevent="moveDown"
+                    @keydown.up.prevent="moveUp"
+                    @keydown.enter.prevent="enterSelect"
                     @input="onSearchItems"
                     @click.stop
                 />
-                <div style="color: #aaa" @click.stop="clearDropdown">↑</div>
+                <span class="custom-select-arrow" @click.stop="clearDropdown">↑</span>
             </template>
-            <span v-else> {{ selected }}</span>
+
+            <span v-else class="custom-select-value">
+                {{ selected }}
+            </span>
         </div>
-        <div
-            v-if="isDropdownVisible"
-            style="
-                border: 1px solid #ccc;
-                position: absolute;
-                width: 100%;
-                max-height: 200px;
-                overflow-y: auto;
-                background: white;
-                z-index: 10;
-            "
-        >
+
+        <div v-if="isDropdownVisible" class="custom-select-dropdown">
             <div
-                v-for="group in searchedItems"
+                v-for="(group, index) in searchedItems"
                 :key="group"
-                style="padding: 8px; cursor: pointer"
+                :ref="(el) => (itemRefs[index] = el as HTMLElement)"
+                class="custom-select-item"
+                :class="['custom-select-item', highlightedIndex === index && 'highlighted']"
                 @click="selectGroup(group)"
             >
                 {{ group }}
