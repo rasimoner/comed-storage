@@ -19,6 +19,7 @@
             <li
                 v-for="(item, index) in filtered"
                 :key="`${item.key}.${item.group}`"
+                ref="itemsRef"
                 @click="select(item)"
                 :class="['autocomplete-item', highlightedIndex === index ? 'highlighted' : '']"
             >
@@ -46,15 +47,27 @@ const open = ref(false);
 const wrapper = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 const highlightedIndex = ref(-1);
+const itemsRef = ref<HTMLElement[]>([]);
 
 watch(
     () => props.showConfigurations,
     () => {
         searchText.value = "";
-        filtered.value = []
+        filtered.value = [];
     },
     { immediate: true },
 );
+
+watch(highlightedIndex, (i) => {
+    if (i < 0) return;
+
+    const el = itemsRef.value[i];
+    if (!el) return;
+
+    el.scrollIntoView({
+        block: "nearest",
+    });
+});
 
 const filterItems = () => {
     filtered.value = [];

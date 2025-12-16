@@ -1,6 +1,6 @@
 <template>
     <div class="value-editor">
-        <label v-if="label">{{ label }}</label>
+        <label v-if="label" class="value-editor-label">{{ label }}</label>
         <div v-if="Array.isArray(localValue)">
             <textarea v-model="arrayText" class="value-textarea"></textarea>
             <button @click="applyArray" class="update-btn">Uygula</button>
