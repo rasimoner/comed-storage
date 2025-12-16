@@ -35,14 +35,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { onMounted, ref, shallowRef, watch } from "vue";
 import ConfigurationsPanel from "./components/ConfigurationsPanel.vue";
 import ClaimsPanel from "./components/ClaimsPanel.vue";
 import ToggleSwitch from "./components/ToggleSwitch.vue";
 import AutocompleteSimple from "./components/AutocompleteSimple.vue";
 import { ConfigItem } from "@/types/config-item.interface";
 import { StorageEntryInterface } from "@/types/storage-entry.interface";
-import logMessage = chrome.cast.logMessage;
 
 const version = chrome.runtime.getManifest().version;
 const showConfigurations = shallowRef(true);
@@ -66,7 +65,7 @@ watch(
 );
 
 const handleData = (rawList: StorageEntryInterface[]) => {
-    if (!rawList || !rawList?.length) {
+    if (showConfigurations.value && (!rawList || !rawList?.length)) {
         error.value = "Comed Parametre ve Yetki Tanımlamaları Bulunamadı!";
         options.value = [];
         selected.value = null;
@@ -110,8 +109,6 @@ const flattenConfigs = (data: any): ConfigItem[] => {
 };
 
 onMounted(() => {
-    // Sistem temasını al
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    isDark.value = prefersDark;
+    isDark.value = window.matchMedia("(prefers-color-scheme: dark)").matches;
 });
 </script>

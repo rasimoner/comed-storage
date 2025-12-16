@@ -57,7 +57,7 @@ body {
 }
 
 .app-header h1 {
-    margin: 0;
+    margin: 0 0 0 24px;
     text-align: center;
     flex: 1;
 }
@@ -309,9 +309,9 @@ body {
 
 .app-version {
     position: fixed;
-    right: 16px;
-    bottom: 12px;
-    font-size: 11px;
+    right: 20px;
+    bottom: 10px;
+    font-size: 10px;
     opacity: 0.8;
     user-select: none;
 }
