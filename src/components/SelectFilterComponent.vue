@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+import { useKeyboardNavigation } from "@/composables/useKeyboardNavigation";
 
 const props = defineProps<{
     selected: string;
@@ -17,6 +18,12 @@ const searchQuery = shallowRef("");
 const isDropdownVisible = shallowRef(false);
 const wrapperRef = ref<HTMLElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
+const itemRefs = ref<HTMLElement[]>([]);
+const { highlightedIndex, moveDown, moveUp, enterSelect, reset } = useKeyboardNavigation({
+    items: searchedItems,
+    itemRefs,
+    onSelect: (value) => selectGroup(value),
+});
 
 const handleClickOutside = (e: MouseEvent) => {
     if (wrapperRef.value && !wrapperRef.value.contains(e.target as Node)) {
@@ -55,6 +62,12 @@ const clearDropdown = () => {
     emit("onSelect", "");
 };
 
+watch(isDropdownVisible, (open) => {
+    if (!open) {
+        reset();
+    }
+});
+
 onMounted(() => {
     document.addEventListener("mousedown", handleClickOutside);
 });
@@ -82,24 +95,27 @@ onBeforeUnmount(() => {
                     ref="searchInputRef"
                     v-model="searchQuery"
                     :placeholder="placeholder"
+                    @keydown.down.prevent="moveDown"
+                    @keydown.up.prevent="moveUp"
+                    @keydown.enter.prevent="enterSelect"
                     @input="onSearchItems"
                     @click.stop
                 />
                 <span class="custom-select-arrow" @click.stop="clearDropdown">↑</span>
             </template>
 
-            <!-- Selected value -->
             <span v-else class="custom-select-value">
                 {{ selected }}
             </span>
         </div>
 
-        <!-- Dropdown -->
         <div v-if="isDropdownVisible" class="custom-select-dropdown">
             <div
-                v-for="group in searchedItems"
+                v-for="(group, index) in searchedItems"
                 :key="group"
+                :ref="(el) => (itemRefs[index] = el as HTMLElement)"
                 class="custom-select-item"
+                :class="['custom-select-item', highlightedIndex === index && 'highlighted']"
                 @click="selectGroup(group)"
             >
                 {{ group }}

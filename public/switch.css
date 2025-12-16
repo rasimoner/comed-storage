@@ -12,6 +12,8 @@
             0 0 70px rgba(1, 153, 242, 0.20),
             0 0 160px rgba(1, 153, 242, 0.15),
             0 0 260px rgba(1, 153, 242, 0.10);
+    --highlight-bg: var(--accent);
+    --highlight-text: #ffffff;
 }
 
 .dark {
@@ -25,8 +27,11 @@
     --border-color: #444;
     --accent: #4dabf7;
     --shadow-popup:
-            0 10px 30px rgba(0, 0, 0, 0.65),
-            0 2px 8px rgba(0, 0, 0, 0.45);
+            0 0 0 1px rgba(255, 255, 255, 0.03),
+            0 12px 40px rgba(0, 0, 0, 0.85),
+            0 0 20px rgba(0, 0, 0, 0.6);
+    --highlight-bg: rgba(255, 255, 255, 0.12);
+    --highlight-text: var(--text-primary);
 }
 
 html,
@@ -283,7 +288,12 @@ body {
 }
 
 .autocomplete-item.highlighted {
-    background-color: var(--bg-muted);
+    background-color: var(--highlight-bg);
+    color: var(--highlight-text);
+}
+
+.autocomplete-item.highlighted .group-label {
+    color: inherit;
 }
 
 .context-warning{
@@ -404,6 +414,11 @@ body {
     color: var(--text-primary);
 
     transition: background-color 0.15s ease;
+}
+
+.custom-select-item.highlighted {
+    background-color: var(--highlight-bg);
+    color: var(--highlight-text);
 }
 
 .custom-select-item:hover {
