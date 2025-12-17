@@ -14,6 +14,8 @@
             0 0 260px rgba(1, 153, 242, 0.10);
     --highlight-bg: var(--accent);
     --highlight-text: #ffffff;
+    --disabled-opacity: 0.7;
+    --header-color: black;
 }
 
 .dark {
@@ -27,11 +29,12 @@
     --border-color: #444;
     --accent: #4dabf7;
     --shadow-popup:
-            0 0 0 1px rgba(255, 255, 255, 0.03),
-            0 12px 40px rgba(0, 0, 0, 0.85),
-            0 0 20px rgba(0, 0, 0, 0.6);
-    --highlight-bg: rgba(255, 255, 255, 0.12);
+            0  -4px 64px rgba(0, 0, 0, 1),
+            0  4px 64px rgba(0, 0, 0, 1);
+    --highlight-bg: #003f72;
     --highlight-text: var(--text-primary);
+    --disabled-opacity: 0.3;
+    --header-color: var(--text-secondary);
 }
 
 html,
@@ -60,6 +63,7 @@ body {
     margin: 0 0 0 24px;
     text-align: center;
     flex: 1;
+    color: var(--header-color);
 }
 
 .popup-container {
@@ -88,7 +92,7 @@ body {
 .segment {
     flex: 1;
     text-align: center;
-    padding: 6px 0;
+    padding: 5px 0;
     z-index: 2;
     font-size: 14px;
     color: var(--text-secondary);
@@ -106,19 +110,15 @@ body {
     height: 100%;
     top: 0;
     left:0;
-    background: var(--accent);
+    background: var(--highlight-bg);
     color: var(--text-secondary);
     border-radius: 20px;
     z-index: 1;
     transition: left 0.25s ease;
 }
 
-.segment.active {
-    color: var(--bg-card); /* veya var(--text-primary) */
-}
-
 .slider-bg.right {
-    left: calc(50% + 4px);
+    left: 50%;
 }
 .select-filter {
     position: relative;
@@ -152,7 +152,7 @@ body {
 }
 
 .value-editor-label {
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 500;
 }
@@ -182,8 +182,8 @@ body {
 .update-btn {
     width: 120px;
     height: 30px;
-    background-color: var(--accent);
-    color: var(--bg-card);
+    background-color: var(--highlight-bg);
+    color: white;
     border-radius: 6px;
     cursor: pointer;
     border: 1px solid var(--border-color);
@@ -202,8 +202,6 @@ body {
     opacity: 0.7;
 }
 
-
-
 .apply-btn {
     margin-top: 8px;
 }
@@ -218,6 +216,12 @@ body {
     border-radius: 6px;
 }
 
+.textArea-div:disabled {
+    opacity: var(--disabled-opacity);
+    background-color: var(--bg-muted);
+    cursor: not-allowed;
+}
+
 .boolean-checkbox {
     align-self: flex-start;
     width: 20px;
@@ -225,13 +229,13 @@ body {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    accent-color: var(--accent);
+    accent-color: var(--highlight-bg);
 }
 
 .autocomplete-simple {
     position: relative;
     width: calc(100% - 16px);
-    margin: 4px 4px 12px 4px;
+    margin: 4px 4px 1rem 4px;
     display: flex;
     flex-direction: column;
     border-radius: 6px;
@@ -243,7 +247,7 @@ body {
 
 .autocomplete-input {
     width: 100%;
-    padding: 8px 10px;
+    padding: 8px 10px 8px 30px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -328,7 +332,7 @@ body {
 
 .theme-toggle:hover {
     transform: scale(1.1);
-    color: var(--accent);
+    color: var(--highlight-bg);
 }
 
 .select-filter {
@@ -357,7 +361,7 @@ body {
     background-color: var(--bg-muted);
     color: var(--text-secondary);
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: var(--disabled-opacity);
 }
 
 .custom-select-placeholder {
@@ -384,7 +388,7 @@ body {
     outline: none;
 
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .custom-select input::placeholder {
@@ -432,4 +436,12 @@ body {
 .custom-select-dropdown::-webkit-scrollbar-thumb {
     background-color: var(--bg-muted);
     border-radius: 4px;
+}
+
+.search-icon {
+    top: 5px;
+    left: 10px;
+    position: absolute;
+    font-size: 16px;
+    opacity: 0.7;
 }

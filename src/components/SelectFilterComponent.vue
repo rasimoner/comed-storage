@@ -13,7 +13,7 @@ const emit = defineEmits<{
     (event: "onSelect", value: string): void;
 }>();
 
-const searchedItems = shallowRef<string[]>([]);
+const searchedItems = ref<string[]>([]);
 const searchQuery = shallowRef("");
 const isDropdownVisible = shallowRef(false);
 const wrapperRef = ref<HTMLElement | null>(null);
@@ -26,13 +26,12 @@ const { highlightedIndex, moveDown, moveUp, enterSelect, reset } = useKeyboardNa
 });
 
 const handleClickOutside = (e: MouseEvent) => {
-    if (wrapperRef.value && !wrapperRef.value.contains(e.target as Node)) {
+    if (wrapperRef.value && !wrapperRef.value.contains(e.target as Node))
         isDropdownVisible.value = false;
-    }
 };
 
 const onSearchItems = () => {
-    searchedItems.value = props.filtered.filter((group) =>
+    searchedItems.value = [...props.filtered].filter((group) =>
         group.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 };
@@ -47,7 +46,7 @@ const toggleDropdown = async () => {
 
     isDropdownVisible.value = !isDropdownVisible.value;
     searchQuery.value = "";
-    searchedItems.value = props.filtered;
+    searchedItems.value = [...props.filtered];
 
     if (isDropdownVisible.value) {
         await nextTick();
@@ -55,44 +54,22 @@ const toggleDropdown = async () => {
     }
 };
 
-const clearDropdown = () => {
-    isDropdownVisible.value = false;
-    searchQuery.value = "";
-    searchedItems.value = props.filtered;
-    emit("onSelect", "");
-};
-
 watch(isDropdownVisible, (open) => {
-    if (!open) {
-        reset();
-    }
+    if (!open) reset();
 });
 
-onMounted(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-});
+onMounted(() => document.addEventListener("mousedown", handleClickOutside));
 
-onBeforeUnmount(() => {
-    document.removeEventListener("mousedown", handleClickOutside);
-});
+onBeforeUnmount(() => document.removeEventListener("mousedown", handleClickOutside));
 </script>
 
 <template>
     <div class="select-filter" ref="wrapperRef">
         <div class="custom-select" :class="{ disabled: props.disabled }" @click="toggleDropdown">
-            <!-- Placeholder -->
-            <div
-                v-if="!searchQuery && !selected && !isDropdownVisible"
-                class="custom-select-placeholder"
-            >
-                <span>{{ placeholder }}</span>
-                <span class="custom-select-arrow">↓</span>
-            </div>
-
-            <!-- Search input -->
-            <template v-else-if="isDropdownVisible">
+            <template v-if="isDropdownVisible">
                 <input
                     ref="searchInputRef"
+                    name="searchInputRef"
                     v-model="searchQuery"
                     :placeholder="placeholder"
                     @keydown.down.prevent="moveDown"
@@ -101,12 +78,17 @@ onBeforeUnmount(() => {
                     @input="onSearchItems"
                     @click.stop
                 />
-                <span class="custom-select-arrow" @click.stop="clearDropdown">↑</span>
+                <span class="custom-select-arrow">↑</span>
             </template>
-
-            <span v-else class="custom-select-value">
-                {{ selected }}
-            </span>
+            <template v-else>
+                <span v-if="selected" class="custom-select-value">
+                    {{ selected }}
+                </span>
+                <div v-else class="custom-select-placeholder">
+                    <span>{{ placeholder }}</span>
+                    <span class="custom-select-arrow">↓</span>
+                </div>
+            </template>
         </div>
 
         <div v-if="isDropdownVisible" class="custom-select-dropdown">

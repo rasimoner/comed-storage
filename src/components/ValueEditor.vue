@@ -20,7 +20,14 @@
             class="number-checkbox"
         />
 
-        <input v-else :disabled="disabled" type="text" v-model="localValue" class="textArea-div" />
+        <input
+            v-else
+            :disabled="disabled"
+            type="text"
+            v-model="localValue"
+            class="textArea-div"
+            placeholder="Değer"
+        />
         <div class="update-button">
             <button :disabled="disabled" @click="emitUpdate" class="update-btn">
                 {{ updateText }}
@@ -54,9 +61,7 @@ watch(
     },
 );
 
-watch(localValue, (val) => {
-    emit("update:modelValue", val);
-});
+watch(localValue, (val) => emit("update:modelValue", val));
 
 const applyArray = () => {
     try {
@@ -66,7 +71,5 @@ const applyArray = () => {
     }
 };
 
-const emitUpdate = () => {
-    emit("updateClick");
-};
+const emitUpdate = () => emit("updateClick");
 </script>
