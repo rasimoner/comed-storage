@@ -1,8 +1,10 @@
 <template>
     <div class="autocomplete-simple" ref="wrapper">
         <div class="autocomplete-input-wrapper">
+            <span class="search-icon">🔍︎</span>
             <input
                 ref="inputRef"
+                name="autocomplete-simple"
                 type="text"
                 :placeholder="placeholder"
                 v-model="searchText"
