@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, shallowRef } from "vue";
+import { ConfigItem } from "@/types/config-item.interface";
+import { onMounted, ref, shallowRef, watch } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
-import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
     selected?: ConfigItem | null;
@@ -180,6 +180,7 @@ onMounted(async () => {
             :filtered="filteredClaims.map((x) => x.key)"
             :selected="selectedClaim"
             placeholder="Yetki Ara..."
+            showCopy
             @onSelect="onClaimSelected"
         />
 
