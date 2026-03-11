@@ -7,11 +7,10 @@
     --text-secondary: #6c757d;
 
     --border-color: #ccc;
-    --accent: #0199F2;
+    --accent: #0199f2;
     --shadow-popup:
-            0 0 70px rgba(1, 153, 242, 0.20),
-            0 0 160px rgba(1, 153, 242, 0.15),
-            0 0 260px rgba(1, 153, 242, 0.10);
+        0 0 70px rgba(1, 153, 242, 0.2), 0 0 160px rgba(1, 153, 242, 0.15),
+        0 0 260px rgba(1, 153, 242, 0.1);
     --highlight-bg: var(--accent);
     --highlight-text: #ffffff;
     --disabled-opacity: 0.7;
@@ -28,9 +27,7 @@
 
     --border-color: #444;
     --accent: #4dabf7;
-    --shadow-popup:
-            0  -4px 64px rgba(0, 0, 0, 1),
-            0  4px 64px rgba(0, 0, 0, 1);
+    --shadow-popup: 0 -4px 64px rgba(0, 0, 0, 1), 0 4px 64px rgba(0, 0, 0, 1);
     --highlight-bg: #003f72;
     --highlight-text: var(--text-primary);
     --disabled-opacity: 0.3;
@@ -47,8 +44,7 @@ body {
     color: var(--text-primary);
 }
 
-
-.app{
+.app {
     height: 100%;
 }
 
@@ -71,7 +67,9 @@ body {
     border-radius: 20px;
     padding: 16px;
     box-shadow: var(--shadow-popup);
-    transition: box-shadow 0.25s ease, background 0.25s ease;
+    transition:
+        box-shadow 0.25s ease,
+        background 0.25s ease;
     width: 600px;
     height: 100%;
     box-sizing: border-box;
@@ -86,7 +84,7 @@ body {
     padding: 4px;
     cursor: pointer;
     user-select: none;
-    margin-bottom:  16px;
+    margin-bottom: 16px;
 }
 
 .segment {
@@ -109,7 +107,7 @@ body {
     width: 50%;
     height: 100%;
     top: 0;
-    left:0;
+    left: 0;
     background: var(--highlight-bg);
     color: var(--text-secondary);
     border-radius: 20px;
@@ -134,7 +132,9 @@ body {
     color: var(--text-primary);
     cursor: pointer;
     opacity: 1;
-    transition: background 0.2s, opacity 0.2s;
+    transition:
+        background 0.2s,
+        opacity 0.2s;
 }
 
 /* Disabled state */
@@ -173,7 +173,7 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.update-button{
+.update-button {
     display: flex;
     justify-content: end;
     align-items: center;
@@ -187,7 +187,9 @@ body {
     border-radius: 6px;
     cursor: pointer;
     border: 1px solid var(--border-color);
-    transition: background-color 0.2s ease, opacity 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        opacity 0.2s ease;
 }
 
 .update-btn:hover:not(:disabled) {
@@ -242,7 +244,9 @@ body {
     background-color: var(--bg-card);
     cursor: pointer;
     opacity: 1;
-    transition: background 0.2s, opacity 0.2s;
+    transition:
+        background 0.2s,
+        opacity 0.2s;
 }
 
 .autocomplete-input {
@@ -275,7 +279,7 @@ body {
     z-index: 1;
 }
 
-.autocomplete-item{
+.autocomplete-item {
     padding: 4px 8px;
     line-height: 1.2;
     cursor: pointer;
@@ -283,7 +287,7 @@ body {
 }
 
 .autocomplete-input:focus {
-    border: 1px solid #0199F2;
+    border: 1px solid #0199f2;
     outline: none;
 }
 
@@ -300,7 +304,7 @@ body {
     color: inherit;
 }
 
-.context-warning{
+.context-warning {
     margin-bottom: 10px;
     text-align: center;
 }
@@ -327,7 +331,9 @@ body {
     cursor: pointer;
     padding: 4px;
     color: var(--text-secondary);
-    transition: transform 0.15s ease, color 0.2s ease;
+    transition:
+        transform 0.15s ease,
+        color 0.2s ease;
 }
 
 .theme-toggle:hover {
@@ -354,7 +360,9 @@ body {
     color: var(--text-primary);
 
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        border-color 0.2s;
 }
 
 .custom-select.disabled {
@@ -382,10 +390,13 @@ body {
 .copy-btn {
     cursor: pointer;
     font-size: 14px;
-    padding: 2px 4px;
-    border-radius: 4px;
+    padding: 2px 4px 2px 8px;
+    border-radius: 0 4px 4px 0;
     color: var(--text-secondary);
-    transition: color 0.2s ease, background-color 0.2s ease;
+    border-left: 1px solid var(--border-color);
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease;
     user-select: none;
     flex-shrink: 0;
     margin-left: 8px;

@@ -98,24 +98,20 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", handleClickOutsi
             <template v-else>
                 <span v-if="selected" class="custom-select-value">
                     {{ selected }}
+                    <span
+                        v-if="showCopy"
+                        class="copy-btn"
+                        :title="copySuccess ? 'Kopyalandı!' : 'Kopyala'"
+                        @click="copyToClipboard"
+                    >
+                        {{ copySuccess ? "✓" : "🗐" }}
+                    </span>
                 </span>
                 <div v-else class="custom-select-placeholder">
                     <span>{{ placeholder }}</span>
                     <span class="custom-select-arrow">↓</span>
                 </div>
             </template>
-
-            <span v-else class="custom-select-value">
-                {{ selected }}
-                <span
-                    v-if="showCopy && selected"
-                    class="copy-btn"
-                    :title="copySuccess ? 'Kopyalandı!' : 'Kopyala'"
-                    @click="copyToClipboard"
-                >
-                    {{ copySuccess ? "✓" : "📋" }}
-                </span>
-            </span>
         </div>
 
         <div v-if="isDropdownVisible" class="custom-select-dropdown">

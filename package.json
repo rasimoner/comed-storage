@@ -1,25 +1,25 @@
 {
-  "name": "comed-storage",
-  "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "watch:build": "vite build --watch",
-    "serve": "vite preview"
-  },
-  "devDependencies": {
-    "@types/chrome": "^0.0.283",
-    "@vitejs/plugin-vue": "^5.2.0",
-    "@vue/compiler-sfc": "^3.5.13",
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.3",
-    "vite": "^6.0.11",
-    "vue": "^3.5.13"
-  },
-  "private": true,
-  "dependencies": {
-    "@types/node": "^25.0.2"
-  }
+    "name": "comed-storage",
+    "version": "1.0.1",
+    "description": "",
+    "main": "main.js",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "watch:build": "vite build --watch",
+        "serve": "vite preview"
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.0.283",
+        "@vitejs/plugin-vue": "^5.2.0",
+        "@vue/compiler-sfc": "^3.5.13",
+        "prettier": "^3.4.2",
+        "typescript": "^5.7.3",
+        "vite": "^6.0.11",
+        "vue": "^3.5.13"
+    },
+    "private": true,
+    "dependencies": {
+        "@types/node": "^25.0.2"
+    }
 }
