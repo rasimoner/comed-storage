@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, shallowRef } from "vue";
+import { ConfigItem } from "@/types/config-item.interface";
+import { onMounted, ref, shallowRef, watch } from "vue";
 import SelectFilterComponent from "./SelectFilterComponent.vue";
 import ValueEditor from "./ValueEditor.vue";
-import { ConfigItem } from "@/types/config-item.interface";
 
 const props = defineProps<{
     selected?: ConfigItem | null;
@@ -182,6 +182,7 @@ onMounted(async () => {
             :filtered="filteredParameters.map((x) => x.key)"
             :selected="selectedParameter"
             placeholder="Parametre Ara..."
+            showCopy
             @onSelect="onParameterSelect"
         />
 
