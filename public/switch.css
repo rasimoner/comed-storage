@@ -374,6 +374,26 @@ body {
 .custom-select-value {
     width: 100%;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.copy-btn {
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    transition: color 0.2s ease, background-color 0.2s ease;
+    user-select: none;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.copy-btn:hover {
+    color: var(--accent);
+    background-color: var(--bg-muted);
 }
 
 .custom-select-arrow {

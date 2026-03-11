@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { useKeyboardNavigation } from "@/composables/useKeyboardNavigation";
+import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 
 const props = defineProps<{
     selected: string;
     filtered: string[];
     placeholder: string;
     disabled?: boolean;
+    showCopy?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -15,6 +16,20 @@ const emit = defineEmits<{
 
 const searchedItems = ref<string[]>([]);
 const searchQuery = shallowRef("");
+const copySuccess = shallowRef(false);
+
+const copyToClipboard = async (e: Event) => {
+    e.stopPropagation();
+    if (!props.selected) return;
+
+    try {
+        await navigator.clipboard.writeText(props.selected);
+        copySuccess.value = true;
+        setTimeout(() => (copySuccess.value = false), 1500);
+    } catch {
+        /* fallback: ignore */
+    }
+};
 const isDropdownVisible = shallowRef(false);
 const wrapperRef = ref<HTMLElement | null>(null);
 const searchInputRef = ref<HTMLInputElement | null>(null);
@@ -89,6 +104,18 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", handleClickOutsi
                     <span class="custom-select-arrow">↓</span>
                 </div>
             </template>
+
+            <span v-else class="custom-select-value">
+                {{ selected }}
+                <span
+                    v-if="showCopy && selected"
+                    class="copy-btn"
+                    :title="copySuccess ? 'Kopyalandı!' : 'Kopyala'"
+                    @click="copyToClipboard"
+                >
+                    {{ copySuccess ? "✓" : "📋" }}
+                </span>
+            </span>
         </div>
 
         <div v-if="isDropdownVisible" class="custom-select-dropdown">
