@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (event: "storage-fetched", value: { key: string; value: string }[]): void;
+    (event: "selection-change", value: ConfigItem): void;
 }>();
 
 const storageData = ref<{ key: string; value: string }[]>([]);
@@ -51,6 +52,23 @@ const onGroupSelect = (val: string) => {
 const onParameterSelect = (val: string) => {
     isUserSelecting.value = true;
     selectedParameter.value = val;
+    emitParameterSelection(val);
+};
+
+const emitParameterSelection = (parameterKey: string) => {
+    const normalizedGroup = selectedGroup.value.trim();
+    const normalizedKey = parameterKey.trim();
+
+    if (!normalizedGroup || !normalizedKey) return;
+
+    const parameter = filteredParameters.value.find((item) => item.key === normalizedKey);
+
+    emit("selection-change", {
+        label: normalizedKey,
+        group: normalizedGroup,
+        key: normalizedKey,
+        value: parameter?.value ?? null,
+    });
 };
 
 const fetchSessionStorageData = async () => {

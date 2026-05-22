@@ -9,6 +9,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (event: "storage-fetched", value: { key: string; value: string }[]): void;
+    (event: "selection-change", value: ConfigItem): void;
 }>();
 
 const claimsData = ref<{ key: string; value: string }[]>([]);
@@ -51,6 +52,23 @@ const findClaimConfigByGroup = (val: string) => {
 const onClaimSelected = (val: string) => {
     isUserSelecting.value = true;
     selectedClaim.value = val;
+    emitClaimSelection(val);
+};
+
+const emitClaimSelection = (claimKey: string) => {
+    const normalizedGroup = selectedGroup.value.trim();
+    const normalizedKey = claimKey.trim();
+
+    if (!normalizedGroup || !normalizedKey) return;
+
+    const claim = filteredClaims.value.find((item) => item.key === normalizedKey);
+
+    emit("selection-change", {
+        label: normalizedKey,
+        group: normalizedGroup,
+        key: normalizedKey,
+        value: claim?.value ?? null,
+    });
 };
 
 const fetchClaimsData = async () => {
