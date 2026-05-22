@@ -249,9 +249,14 @@ body {
         opacity 0.2s;
 }
 
+.autocomplete-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
 .autocomplete-input {
     width: 100%;
-    padding: 8px 10px 8px 30px;
+    padding: 8px 40px 8px 30px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -259,8 +264,88 @@ body {
     box-sizing: border-box;
 }
 
+.recent-toggle {
+    position: absolute;
+    top: 50%;
+    right: 1px;
+    width: 32px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.recent-toggle::before {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 1px;
+    background-color: var(--border-color);
+    content: "";
+}
+
+.recent-toggle:hover,
+.recent-toggle.active {
+    background-color: var(--bg-muted);
+    color: var(--accent);
+}
+
+.recent-toggle-icon {
+    width: 15px;
+    height: 15px;
+}
+
 .autocomplete-input::placeholder {
     color: var(--text-secondary);
+}
+
+.recent-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+}
+
+.recent-item,
+.recent-empty {
+    padding: 7px 10px;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.recent-item {
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.recent-item:hover {
+    background-color: var(--bg-muted);
+}
+
+.recent-empty {
+    color: var(--text-secondary);
+    cursor: default;
 }
 
 .autocomplete-dropdown {
